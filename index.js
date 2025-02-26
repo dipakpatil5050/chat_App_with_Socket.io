@@ -5,19 +5,30 @@ const { Server } = require("socket.io");
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server);
 
-// Socket.io
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+  },
+});
+
 io.on("connection", (socket) => {
+  console.log("User connected:", socket.id);
+
   socket.on("user-message", (message) => {
-    io.emit("message", message);
+    socket.broadcast.emit("message", message);
+  });
+
+  socket.on("disconnect", () => {
+    console.log("User disconnected:", socket.id);
   });
 });
 
-app.use(express.static(path.resolve("./public")));
+app.use(express.static(path.join(__dirname, "public")));
 
 app.get("/", (req, res) => {
-  return res.sendFile("/public/index.html");
+  res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-server.listen(9000, () => console.log(`Server Started at PORT:9000`));
+const PORT = process.env.PORT || 9000;
+server.listen(PORT, () => console.log(`Server started at PORT: ${PORT}`));
