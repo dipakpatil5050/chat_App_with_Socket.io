@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chat App</title>
+    <style>
+      body,
+      html {
+        margin: 0;
+        padding: 30px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background-color: #1c1c1c;
+      }
+
+      /* Mobile Frame */
+      .mobile-frame {
+        width: 290px;
+        height: 590px;
+        background: #fff;
+        border-radius: 20px;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        /* padding-top: 90px;    */
+      }
+
+      /* Chat Header */
+      .chat-header {
+        background: #007bff;
+        color: white;
+        padding: 15px;
+        text-align: center;
+        font-size: 1.2em;
+      }
+
+      /* Chat Messages */
+      .chat-messages {
+        flex: 1;
+        padding: 10px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* Message Styles */
+      .message {
+        max-width: 75%;
+        padding: 10px;
+        margin: 5px;
+        border-radius: 10px;
+        word-wrap: break-word;
+      }
+      .user-message {
+        background: #007bff;
+        color: white;
+        align-self: flex-end;
+      }
+      .server-message {
+        background: #f1f1f1;
+        align-self: flex-start;
+      }
+
+      /* Chat Input */
+      .chat-input {
+        display: flex;
+        padding: 10px;
+        background: #fff;
+      }
+      .chat-input input {
+        flex: 1;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 20px;
+        font-size: 1em;
+      }
+      .chat-input button {
+        background: #007bff;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        margin-left: 10px;
+        border-radius: 50%;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="mobile-frame">
+      <div class="chat-header">Support Chat App</div>
+      <div class="chat-messages" id="messages"></div>
+      <div class="chat-input">
+        <input type="text" id="message" placeholder="Type your message..." />
+        <button id="sendBtn">➤</button>
+      </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      const socket = io();
+      const sendBtn = document.getElementById("sendBtn");
+      const messageInput = document.getElementById("message");
+      const allMessages = document.getElementById("messages");
+
+      const sendChatMessage = () => {
+        const message = messageInput.value.trim();
+        if (message) {
+          const p = document.createElement("div");
+          p.innerText = message;
+          p.classList.add("message", "user-message");
+          allMessages.appendChild(p);
+          allMessages.scrollTop = allMessages.scrollHeight;
+          socket.emit("user-message", { message, sender: socket.id });
+          messageInput.value = "";
+        }
+      };
+
+      socket.on("message", ({ message, sender }) => {
+        if (sender !== socket.id) {
+          const p = document.createElement("div");
+          p.innerText = message;
+          p.classList.add("message", "server-message");
+          allMessages.appendChild(p);
+          allMessages.scrollTop = allMessages.scrollHeight;
+        }
+      });
+
+      sendBtn.addEventListener("click", sendChatMessage);
+      messageInput.addEventListener("keypress", (event) => {
+        if (event.key === "Enter") {
+          sendChatMessage();
+        }
+      });
+    </script>
+  </body>
+</html>
